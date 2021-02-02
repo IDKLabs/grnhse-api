@@ -3,17 +3,37 @@
 """
 
 
-class InvalidAPIVersion(Exception):
+class HarvestException(Exception):
     pass
 
 
-class InvalidAPICallError(Exception):
+class InvalidAPIVersion(HarvestException):
     pass
 
 
-class HTTPError(Exception):
+class InvalidAPICallError(HarvestException):
     pass
 
 
-class EndpointNotFound(Exception):
+class EndpointNotFound(HarvestException):
+    pass
+
+
+class HarvestHTTPException(HarvestException):
+    pass
+
+
+class HarvestObjectNotFoundError(HarvestHTTPException):
+    pass
+
+
+class HarvestValidationError(HarvestHTTPException):
+    pass
+
+
+class HarvestUnauthorizedError(HarvestHTTPException):
+    pass
+
+
+class HarvestForbiddenError(HarvestHTTPException):
     pass
