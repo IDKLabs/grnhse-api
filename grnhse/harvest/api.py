@@ -3,12 +3,45 @@ import requests
 import six
 
 from grnhse.exceptions import (
+    HarvestForbiddenError,
+    HarvestHTTPException,
+    HarvestObjectNotFoundError,
+    HarvestUnauthorizedError,
+    HarvestValidationError,
     InvalidAPIVersion,
     InvalidAPICallError,
-    HTTPError,
-    EndpointNotFound)
+    EndpointNotFound,
+)
 from grnhse.harvest.versions import api_versions
 from grnhse.util import extract_header_links, strf_dt
+
+
+def raise_harvest_exception(resp, *args, **kwargs):
+    try:
+        resp.raise_for_status()
+    except requests.HTTPError:
+        if resp.status_code == requests.codes.UNAUTHORIZED:
+            raise HarvestUnauthorizedError("Invalid Harvest API key")
+
+        if resp.status_code == requests.codes.FORBIDDEN:
+            raise HarvestForbiddenError("You do not have access to that record")
+
+        if resp.status_code == requests.codes.NOT_FOUND:
+            raise HarvestObjectNotFoundError("Resource not found")
+
+        if resp.status_code == requests.UNPROCESSABLE_ENTITY:
+            try:
+                data = resp.json()
+                errors = data['errors']
+            except ValueError:
+                errors = []
+
+            raise HarvestValidationError(
+                "Validation Error",
+                errors=errors,
+            )
+
+        raise HarvestHTTPException('{r.status_code} {r.text}'.format(r=resp))
 
 
 class SessionAuthMixin(object):
@@ -18,6 +51,7 @@ class SessionAuthMixin(object):
     def __init__(self, api_key):
         self._api_key = api_key
         self._session = requests.Session()
+        self._session.hooks["response"] = [raise_harvest_exception]
         self._set_auth()
 
     def _set_auth(self):
@@ -148,11 +182,8 @@ class HarvestObject(SessionAuthMixin):
         _params = self._params if params is True else None
         response = self._session.get(url, params=_params)
 
-        if response.status_code == requests.codes.ok:
-            self._process_header_links(response.headers)
-            return response.json()
-        else:
-            raise HTTPError('{r.status_code} {r.text}'.format(r=response))
+        self._process_header_links(response.headers)
+        return response.json()
 
     def get(self, object_id=None, **params):
         oid = object_id or self._object_id
