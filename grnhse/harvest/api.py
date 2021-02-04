@@ -29,7 +29,7 @@ def raise_harvest_exception(resp, *args, **kwargs):
         if resp.status_code == requests.codes.NOT_FOUND:
             raise HarvestObjectNotFoundError("Resource not found")
 
-        if resp.status_code == requests.UNPROCESSABLE_ENTITY:
+        if resp.status_code == requests.codes.UNPROCESSABLE_ENTITY:
             try:
                 data = resp.json()
                 errors = data['errors']
