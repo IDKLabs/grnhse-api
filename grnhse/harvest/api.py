@@ -6,6 +6,7 @@ from grnhse.exceptions import (
     HarvestForbiddenError,
     HarvestHTTPException,
     HarvestObjectNotFoundError,
+    HarvestRateLimitError,
     HarvestUnauthorizedError,
     HarvestValidationError,
     InvalidAPIVersion,
@@ -40,6 +41,9 @@ def raise_harvest_exception(resp, *args, **kwargs):
                 "Validation Error",
                 errors=errors,
             )
+
+        if resp.status_code == requests.codes.TOO_MANY_REQUESTS:
+            raise HarvestRateLimitError("Rate limit exceeded")
 
         raise HarvestHTTPException('{r.status_code} {r.text}'.format(r=resp))
 

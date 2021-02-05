@@ -37,3 +37,7 @@ class HarvestUnauthorizedError(HarvestHTTPException):
 
 class HarvestForbiddenError(HarvestHTTPException):
     pass
+
+
+class HarvestRateLimitError(HarvestHTTPException):
+    pass
