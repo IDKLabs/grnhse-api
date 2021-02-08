@@ -7,6 +7,7 @@ from grnhse.exceptions import (
     HarvestHTTPException,
     HarvestObjectNotFoundError,
     HarvestRateLimitError,
+    HarvestServerError,
     HarvestUnauthorizedError,
     HarvestValidationError,
     InvalidAPIVersion,
@@ -44,6 +45,9 @@ def raise_harvest_exception(resp, *args, **kwargs):
 
         if resp.status_code == requests.codes.TOO_MANY_REQUESTS:
             raise HarvestRateLimitError("Rate limit exceeded")
+
+        if resp.status_code == requests.codes.INTERNAL_SERVER_ERROR:
+            raise HarvestServerError("Server error")
 
         raise HarvestHTTPException('{r.status_code} {r.text}'.format(r=resp))
 
@@ -216,11 +220,7 @@ class HarvestObject(SessionAuthMixin):
 
     def _post(self, url, data, on_behalf_of):
         response = self._session.post(url, json=data, headers={'On-Behalf-Of': on_behalf_of})
-
-        if response.status_code == requests.codes.created:
-            return response.json()
-        else:
-            raise HTTPError('{r.status_code} {r.text}'.format(r=response))
+        return response.json()
 
     def post(self, data, on_behalf_of=None):
         onb = on_behalf_of or self._on_behalf_of
