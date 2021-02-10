@@ -28,7 +28,9 @@ class HarvestObjectNotFoundError(HarvestHTTPException):
 
 
 class HarvestValidationError(HarvestHTTPException):
-    pass
+    def __init__(self, *args, errors=list):
+        super().__init__(*args)
+        self.errors = errors
 
 
 class HarvestUnauthorizedError(HarvestHTTPException):
