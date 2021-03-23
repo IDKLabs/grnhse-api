@@ -46,7 +46,7 @@ def raise_harvest_exception(resp, *args, **kwargs):
         if resp.status_code == requests.codes.TOO_MANY_REQUESTS:
             raise HarvestRateLimitError("Rate limit exceeded")
 
-        if resp.status_code == requests.codes.INTERNAL_SERVER_ERROR:
+        if resp.status_code >= 500:
             raise HarvestServerError("Server error")
 
         raise HarvestHTTPException('{r.status_code} {r.text}'.format(r=resp))
